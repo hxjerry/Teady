@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import com.sismics.docs.core.constant.Constants;
+import com.sismics.docs.core.constant.ConfigType;
+import com.sismics.docs.core.dao.ConfigDao;
 import com.sismics.docs.core.dao.UserDao;
 import com.sismics.docs.core.listener.async.*;
 import com.sismics.docs.core.model.jpa.User;
@@ -136,6 +138,11 @@ public class AppContext {
                 adminUser.setEmail(envAdminEmail);
                 userDao.update(adminUser, "admin");
             }
+        }
+
+        // In dev mode, keep guest login enabled to simplify local web UI testing.
+        if (EnvironmentUtil.isDevMode()) {
+            new ConfigDao().update(ConfigType.GUEST_LOGIN, Boolean.TRUE.toString());
         }
     }
 
