@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ruleset name="Teedy PMD Metrics Rules"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+  <description>
+    Custom PMD rules for the Practice 7 metrics: lines of code, cyclomatic
+    complexity, weighted methods per class, coupling between objects, and
+    class cohesion.
+  </description>
+
+  <!-- Lines of code: NCSS is PMD's statement-based LoC metric. -->
+  <rule ref="category/java/design.xml/NcssCount" />
+
+  <!-- Cyclomatic complexity and WMC: class-level cyclomatic total is WMC. -->
+  <rule ref="category/java/design.xml/CyclomaticComplexity" />
+
+  <!-- Weighted methods per class proxy: flags classes with too many methods. -->
+  <rule ref="category/java/design.xml/TooManyMethods" />
+
+  <!-- Coupling between objects. -->
+  <rule ref="category/java/design.xml/CouplingBetweenObjects" />
+
+  <!-- Cohesion proxy: GodClass reports low tight class cohesion with WMC. -->
+  <rule ref="category/java/design.xml/GodClass" />
+</ruleset>
