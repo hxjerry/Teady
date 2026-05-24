@@ -4,49 +4,49 @@ pipeline {
     stages {
         stage('Clean') {
             steps {
-                sh 'mvn clean'
+                sh 'mvn -B clean'
             }
         }
 
         stage('Compile') {
             steps {
-                sh 'mvn compile'
+                sh 'mvn -B compile'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test -Dmaven.test.failure.ignore=true'
+                sh 'mvn -B test -Dmaven.test.failure.ignore=true'
             }
         }
 
         stage('PMD') {
             steps {
-                sh 'mvn pmd:pmd'
+                sh 'mvn -B pmd:pmd'
             }
         }
 
         stage('JaCoCo') {
             steps {
-                sh 'mvn jacoco:report'
+                sh 'mvn -B jacoco:report'
             }
         }
 
         stage('Javadoc') {
             steps {
-                sh 'mvn javadoc:javadoc'
-            }
-        }
-
-        stage('Site') {
-            steps {
-                sh 'mvn site'
+                sh 'mvn -B javadoc:javadoc'
             }
         }
 
         stage('Package') {
             steps {
-                sh 'mvn package -DskipTests'
+                sh 'mvn -B install -DskipTests'
+            }
+        }
+
+        stage('Site') {
+            steps {
+                sh 'mvn -B site -DskipTests'
             }
         }
     }
