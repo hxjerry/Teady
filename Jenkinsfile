@@ -20,9 +20,15 @@ pipeline {
             }
         }
 
+        stage('Package') {
+            steps {
+                sh 'mvn -B -U install -DskipTests'
+            }
+        }
+
         stage('PMD') {
             steps {
-                sh 'mvn -B pmd:pmd'
+                sh 'mvn -B -U pmd:pmd'
             }
         }
 
@@ -38,15 +44,9 @@ pipeline {
             }
         }
 
-        stage('Package') {
-            steps {
-                sh 'mvn -B install -DskipTests'
-            }
-        }
-
         stage('Site') {
             steps {
-                sh 'mvn -B site -DskipTests'
+                sh 'mvn -B -U site -DskipTests'
             }
         }
     }
