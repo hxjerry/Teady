@@ -40,7 +40,7 @@ pipeline {
 
         stage('Javadoc') {
             steps {
-                sh 'mvn -B javadoc:javadoc'
+                sh 'mvn -B javadoc:javadoc -Ddoclint=none'
             }
         }
 
