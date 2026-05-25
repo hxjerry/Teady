@@ -1,7 +1,18 @@
 pipeline {
     agent any
-
+    options {
+        // Skips the automatic checkout at the start
+        skipDefaultCheckout()
+    }
     stages {
+        stage('Clean Workspace') {
+            steps {
+                // Deletes the workspace before the build starts
+                cleanWs()
+                checkout scm
+            }
+        }
+
         stage('Clean') {
             steps {
                 sh 'mvn -B clean'
@@ -57,7 +68,6 @@ pipeline {
             archiveArtifacts artifacts: '**/target/**/*.jar', fingerprint: true
             archiveArtifacts artifacts: '**/target/**/*.war', fingerprint: true
             junit '**/target/surefire-reports/*.xml'
-            cleanWs()
         }
     }
 }
