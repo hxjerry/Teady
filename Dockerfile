@@ -13,6 +13,10 @@ ENV JETTY_VERSION 11.0.20
 ENV JETTY_HOME /opt/jetty
 
 # Install packages
+RUN sed -i \
+    -e 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.sustech.edu.cn/ubuntu/|g' \
+    -e 's|http://security.ubuntu.com/ubuntu/|http://mirrors.sustech.edu.cn/ubuntu/|g' \
+    /etc/apt/sources.list
 RUN apt-get update && \
     apt-get -y -q --no-install-recommends install \
     vim less procps unzip wget tzdata openjdk-11-jdk \
