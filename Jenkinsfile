@@ -5,7 +5,7 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}"
         DOCKER_CREDENTIALS_ID = 'dockerhub'
         DOCKER_SERVICE = 'teedy'
-        DOCKER_REPLICAS = '3'
+        DOCKER_PORTS = '8081 8082 8083'
     }
     options {
         // Skips the automatic checkout at the start
@@ -105,19 +105,31 @@ pipeline {
                         fi
 
                         if docker service inspect "$DOCKER_SERVICE" >/dev/null 2>&1; then
-                            docker service update \
-                                --with-registry-auth \
-                                --image "$DOCKER_IMAGE:$DOCKER_TAG" \
-                                --replicas "$DOCKER_REPLICAS" \
-                                "$DOCKER_SERVICE"
-                        else
-                            docker service create \
-                                --with-registry-auth \
-                                --name "$DOCKER_SERVICE" \
-                                --replicas "$DOCKER_REPLICAS" \
-                                --publish published=8080,target=8080 \
-                                "$DOCKER_IMAGE:$DOCKER_TAG"
+                            docker service rm "$DOCKER_SERVICE"
                         fi
+
+                        index=1
+                        for port in $DOCKER_PORTS; do
+                            service="$DOCKER_SERVICE-$index"
+
+                            if docker service inspect "$service" >/dev/null 2>&1; then
+                                docker service update \
+                                    --with-registry-auth \
+                                    --image "$DOCKER_IMAGE:$DOCKER_TAG" \
+                                    --publish-rm 8080 \
+                                    --publish-add "published=$port,target=8080" \
+                                    "$service"
+                            else
+                                docker service create \
+                                    --with-registry-auth \
+                                    --name "$service" \
+                                    --replicas 1 \
+                                    --publish "published=$port,target=8080" \
+                                    "$DOCKER_IMAGE:$DOCKER_TAG"
+                            fi
+
+                            index=$((index + 1))
+                        done
                     '''
                 }
             }
