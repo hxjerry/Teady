@@ -6,6 +6,12 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'dockerhub'
         DOCKER_SERVICE = 'teedy'
         DOCKER_PORTS = '8081 8082 8083'
+        K8S_NAMESPACE = 'default'
+        K8S_DEPLOYMENT = 'teedy'
+        K8S_REPLICAS = '3'
+        K8S_SERVICE_PORT = '8090'
+        K8S_CONTAINER_PORT = '8080'
+        K8S_IMAGE_PULL_SECRET = 'dockerhub'
     }
     options {
         // Skips the automatic checkout at the start
@@ -130,6 +136,68 @@ pipeline {
 
                             index=$((index + 1))
                         done
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Kubernetes') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh '''
+                        set -eu
+                        printf '%s' "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+                        kubectl create secret generic "$K8S_IMAGE_PULL_SECRET" \
+                            --namespace "$K8S_NAMESPACE" \
+                            --from-file=.dockerconfigjson="$HOME/.docker/config.json" \
+                            --type=kubernetes.io/dockerconfigjson \
+                            --dry-run=client \
+                            -o yaml | kubectl apply -f -
+
+                        cat <<EOF | kubectl apply --namespace "$K8S_NAMESPACE" -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $K8S_DEPLOYMENT
+  labels:
+    app: $K8S_DEPLOYMENT
+spec:
+  replicas: $K8S_REPLICAS
+  selector:
+    matchLabels:
+      app: $K8S_DEPLOYMENT
+  template:
+    metadata:
+      labels:
+        app: $K8S_DEPLOYMENT
+    spec:
+      imagePullSecrets:
+        - name: $K8S_IMAGE_PULL_SECRET
+      containers:
+        - name: $K8S_DEPLOYMENT
+          image: $DOCKER_IMAGE:$DOCKER_TAG
+          imagePullPolicy: Always
+          ports:
+            - containerPort: $K8S_CONTAINER_PORT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $K8S_DEPLOYMENT
+spec:
+  type: NodePort
+  selector:
+    app: $K8S_DEPLOYMENT
+  ports:
+    - name: http
+      port: $K8S_SERVICE_PORT
+      targetPort: $K8S_CONTAINER_PORT
+EOF
+
+                        kubectl rollout status deployment/"$K8S_DEPLOYMENT" \
+                            --namespace "$K8S_NAMESPACE" \
+                            --timeout=180s
                     '''
                 }
             }
